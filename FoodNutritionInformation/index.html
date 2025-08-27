@@ -1,254 +1,102 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>음식 검색</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            display: flex;
-            height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            width: 100%;
-        }
-
-        #left-panel {
-            width: 60%;
-            padding: 20px;
-            box-sizing: border-box;
-            background-color: #fff;
-            border-right: 2px solid #ddd;
-            overflow-y: auto; /* Enable scrolling if content overflows */
-        }
-
-        #right-panel {
-            width: 50%;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            color: #333;
-            text-align: center;
-            width: 20%;
-            margin: 20px;
-            margin-left: 30px;
-            margin-right: 30px;
-        }
-
-        #food-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s, transform 0.3s;
-            display: flex;
-            align-items: center;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        .food-button {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .plus-button {
-            background-color: #28a745;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .plus-button:hover {
-            background-color: #218838;
-        }
-
-        #food-info {
-            background-color: white;
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            white-space: pre-wrap;
-        }
-
-        #total-energy {
-            display: block;
-            width: 100px;
-            margin: 20px auto;
-            padding: 10px;
-            text-align: center;
-            font-size: 18px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fff;
-            color: #333;
-        }
-
-        #search-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        #search-input {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 300px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>음식 검색</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; height:100vh; display:flex; flex-direction:column; }
+    h1 { text-align:center; margin:16px 0; }
+    .container { display:flex; flex:1; }
+    #left-panel { width:60%; padding:20px; background:#fff; box-sizing:border-box; border-right:2px solid #ddd; overflow:auto; }
+    #right-panel { width:40%; padding:20px; box-sizing:border-box; overflow:auto; }
+    #food-info { background:#fff; border:1px solid #ddd; border-radius:6px; padding:16px; white-space:pre-wrap; min-height:160px; }
+    #food-buttons { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button { background:#007bff; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    #total-energy { margin-top:12px; padding:8px; width:160px; text-align:right; }
+    #search-container { display:flex; gap:8px; }
+    #search-input { flex:1; padding:8px; }
+  </style>
 </head>
 <body>
-    <h1>음식 검색</h1>
-    <div class="container">
-        <div id="left-panel">
-            <div id="food-info">음식 정보가 여기에 표시됩니다.</div>
-        </div>
-        <div id="right-panel">
-            <div id="search-container">
-                <input type="text" id="search-input" placeholder="음식을 검색하세요...">
-                <button onclick="searchFoods()">검색</button>
-            </div>
-            <div id="food-buttons"></div>
-            <input type="text" id="total-energy" value="0" readonly>
-        </div>
+  <h1>음식 검색</h1>
+  <div class="container">
+    <div id="left-panel">
+      <div id="food-info">음식 정보가 여기에 표시됩니다.</div>
     </div>
-    <script>
-        function getFoodInfo(foodName) {
-            fetch(`/get_food_info?food_name=${foodName}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('서버 응답 오류: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        console.log("Food data:", data);
-                        document.getElementById('food-info').innerText = `
-                            식품명: ${data['식품명'] || '정보 없음'}\n
-                            대분류명: ${data['식품대분류명'] || '정보 없음'}\n
-                            에너지: ${data['에너지(kcal)'] || '정보 없음'} kcal\n
-                            수분: ${data['수분(g)'] || '정보 없음'} g\n
-                            단백질: ${data['단백질(g)'] || '정보 없음'} g\n
-                            지방: ${data['지방(g)'] || '정보 없음'} g\n
-                            탄수화물: ${data['탄수화물(g)'] || '정보 없음'} g\n
-                            당류: ${data['당류(g)'] || '정보 없음'} g\n
-                            칼슘: ${data['칼슘(mg)'] || '정보 없음'} mg\n
-                            나트륨: ${data['나트륨(mg)'] || '정보 없음'} mg\n
-                            콜레스테롤: ${data['콜레스테롤(mg)'] || '정보 없음'} mg\n
-                            포화지방산: ${data['포화지방산(g)'] || '정보 없음'} g
-                        `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('문제가 발생했습니다. 서버 로그를 확인하세요.');
-                });
+    <div id="right-panel">
+      <div id="search-container">
+        <input type="text" id="search-input" placeholder="음식을 검색하세요..." />
+        <button id="search-btn" type="button">검색</button>
+      </div>
+      <div id="food-buttons"></div>
+      <input type="text" id="total-energy" value="0 kcal" readonly />
+    </div>
+  </div>
+
+  <script>
+    function apiUrl(path, params = {}) {
+      const url = new URL(path, window.location.origin);
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      return url.toString();
+    }
+
+    async function getFoodInfo(foodName) {
+      try {
+        const res = await fetch(apiUrl('/get_food_info', { food_name: foodName }));
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+        if (data.error) return alert(data.error);
+        const val = (x) => (x === 0 || x ? x : '정보 없음');
+        document.getElementById('food-info').innerText =
+`식품명: ${val(data['식품명'])}
+대분류명: ${val(data['식품대분류명'])}
+에너지: ${val(data['에너지(kcal)'])} kcal
+수분: ${val(data['수분(g)'])} g
+단백질: ${val(data['단백질(g)'])} g
+지방: ${val(data['지방(g)'])} g
+탄수화물: ${val(data['탄수화물(g)'])} g
+당류: ${val(data['당류(g)'])} g
+칼슘: ${val(data['칼슘(mg)'])} mg
+나트륨: ${val(data['나트륨(mg)'])} mg
+콜레스테롤: ${val(data['콜레스테롤(mg)'])} mg
+포화지방산: ${val(data['포화지방산(g)'])} g`;
+      } catch (e) {
+        console.error(e);
+        alert('문제가 발생했습니다. (getFoodInfo)');
+      }
+    }
+
+    async function searchFoods() {
+      try {
+        const query = document.getElementById('search-input').value || '';
+        const res = await fetch(apiUrl('/search_foods', { query }));
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+
+        const wrap = document.getElementById('food-buttons');
+        wrap.innerHTML = '';
+        if (Array.isArray(data.food_names) && data.food_names.length) {
+          data.food_names.forEach((name) => {
+            const infoBtn = document.createElement('button');
+            infoBtn.textContent = name;
+            infoBtn.onclick = () => getFoodInfo(name);
+            wrap.appendChild(infoBtn);
+          });
+        } else {
+          const p = document.createElement('p');
+          p.textContent = '검색 결과가 없습니다.';
+          wrap.appendChild(p);
         }
+      } catch (e) {
+        console.error(e);
+        alert('문제가 발생했습니다. (searchFoods)');
+      }
+    }
 
-        function addEnergyValue(foodName) {
-            fetch(`/get_food_info?food_name=${foodName}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('서버 응답 오류: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        // Check if the energy value exists and is a number
-                        let energyValue = parseFloat(data['에너지(kcal)']);
-                        if (isNaN(energyValue)) {
-                            energyValue = 0;
-                        }
-
-                        let currentVal = parseFloat(document.getElementById('total-energy').value) || 0;
-                        let newVal = currentVal + (energyValue * 100);
-                        document.getElementById('total-energy').value = newVal + "kcal";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('문제가 발생했습니다. 서버 로그를 확인하세요.');
-                });
-        }
-
-        function searchFoods() {
-            const query = document.getElementById('search-input').value;
-            fetch(`/search_foods?query=${query}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('서버 응답 오류: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const foodButtonsContainer = document.getElementById('food-buttons');
-                    foodButtonsContainer.innerHTML = ''; // Clear existing buttons
-
-                    if (data.food_names.length > 0) {
-                        data.food_names.forEach(food_name => {
-                            const container = document.createElement('div');
-                            container.className = 'food-button';
-
-                            const infoButton = document.createElement('button');
-                            infoButton.textContent = food_name;
-                            infoButton.onclick = () => getFoodInfo(food_name);
-                            container.appendChild(infoButton);
-
-                            const plusButton = document.createElement('button');
-                            plusButton.className = 'plus-button';
-                            plusButton.textContent = '+';
-                            plusButton.onclick = () => addEnergyValue(food_name);
-                            container.appendChild(plusButton);
-
-                            foodButtonsContainer.appendChild(container);
-                        });
-                    } else {
-                        const noResults = document.createElement('p');
-                        noResults.textContent = '검색 결과가 없습니다.';
-                        foodButtonsContainer.appendChild(noResults);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('문제가 발생했습니다. 서버 로그를 확인하세요.');
-                });
-        }
-
-    </script>
+    document.getElementById('search-btn').addEventListener('click', searchFoods);
+    document.getElementById('search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchFoods();
+    });
+  </script>
 </body>
 </html>
